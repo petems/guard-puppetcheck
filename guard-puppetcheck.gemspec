@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'bundler', '>= 1.3.5'
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'rspec', '~> 2.14.1'
-  s.add_development_dependency 'coveralls'
-  s.add_development_dependency "rspec-given"
-  s.add_development_dependency "guard-rspec"
+  s.add_development_dependency 'coveralls', '~> 0.7.0'
+  s.add_development_dependency 'rspec-given', '~> 3.5.3'
+  s.add_development_dependency 'guard-rspec', '~> 4.2.5'
 end
