@@ -1,7 +1,5 @@
 require 'guard'
 require 'guard/plugin'
-require 'puppet'
-require 'puppet-lint'
 
 module Guard
   class PuppetCheck < Plugin
@@ -35,39 +33,43 @@ module Guard
 
     # Print the result of the command(s), if there are results to be printed.
     def run_on_change(res)
-      @linter = PuppetLint.new
-
-      messages = []
+      errors = 0
       res.each do |file|
         file = File.join( options[:watchdir].to_s,file ) if options[:watchdir]
 
         if options[:syntax_check]
-          UI.info "Guard::PuppetCheck is running a syntax check..."
-          Puppet.initialize_settings unless Puppet.settings.app_defaults_initialized?
-          UI.info "Parsing with Puppet Version: #{Puppet.version}"
-
-          begin
-            parser = Puppet::Parser::Parser.new("PuppetCheckParser")
-            parser.import(file)
-            puts "No error found on #{file}"
-          rescue Puppet::ParseError => e
-            messages << "Parser Error! File: #{file} - Error: #{e}"
+          puts "Guard::PuppetLint: Syntax Check Enabled - Running on #{file}"
+          maybe_bundle_with_env do
+            @parser_messages = `puppet parser validate #{file} --color=false 2>&1`.split("\n")
           end
         end
 
-        @linter.file = file
-        @linter.clear_messages
-        @linter.run
-        linter_msg = @linter.messages.reject { |s| !options[:show_warnings] && s =~ /WARNING/ }
-        messages += prepend_filename(linter_msg, file)
+        UI.info "Guard::PuppetLint: Running Lint on #{file}"
+        
+        @lint_messages = `puppet-lint #{file} --no-autoloader_layout-check`    
+
+        if @parser_messages.nil? && @lint_messages.nil?
+          UI.info "Guard::PuppetLint: No Issues Found, Hooray!"
+          image = :success
+        else
+          UI.error "Guard::PuppetLint: Issues Found!"
+          UI.error "Parser Errors: #{@parser_messages}" unless @parser_messages.empty?
+          UI.error "Lint Errors:\n#{@lint_messages}" unless @lint_messages.empty?
+          image = :failed
+        end
+        Notifier.notify( 'Guard::PuppetLint', :title => "Puppet lint", :image => image )
+        Notifier.notify( "Parser Errors:\n#{@parser_messages}", :title => "Puppet lint", :image => image ) unless @parser_messages.empty?
+        Notifier.notify( "Lint Errors:\n#{@lint_messages}", :title => "Puppet lint", :image => image ) unless @lint_messages.empty?
       end
-      if messages.empty?
-        messages = ["Files are ok:"] + res
-        image = :success
+    end
+
+    private
+    def maybe_bundle_with_env(&block)
+      if defined?(::Bundler)
+        Bundler.with_clean_env(&block)
       else
-        image = :failed
+        yield
       end
-      Notifier.notify( messages.join("\n"), :title => "Puppet lint", :image => image )
     end
 
   end

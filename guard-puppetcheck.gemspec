@@ -18,9 +18,10 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'guard',        '~> 2.0'
   s.add_dependency 'puppet-lint',  '~> 0.3.2'
-  s.add_dependency 'puppet',       '~> 3.4.0'
   
   s.add_development_dependency 'bundler', '>= 1.3.5'
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'rspec', '~> 2.14.1'
+  s.add_development_dependency 'coveralls'
+  s.add_development_dependency "rspec-given"
 end
