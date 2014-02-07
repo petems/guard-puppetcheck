@@ -24,4 +24,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', '~> 2.14.1'
   s.add_development_dependency 'coveralls'
   s.add_development_dependency "rspec-given"
+  s.add_development_dependency "guard-rspec"
 end
